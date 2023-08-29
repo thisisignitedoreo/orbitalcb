@@ -45,7 +45,12 @@ clickpack/
 │  │  ├─ releases/
 │  ├─ holds/
 │  ├─ releases/
+├─ meta.json
 ```
+
+Notice `meta.json` file: it has some info like name of the clickpack, author, and small description
+which is shown right after clickpack was loaded. It is simple [JSON](https://en.wikipedia.org/wiki/JSON)
+file. You can see sample in sample clickpack included with the release.
 
 ## For developers
 
