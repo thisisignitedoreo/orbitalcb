@@ -17,7 +17,7 @@ _Planned_:
 - ReplayEngine
 - MHReplay
 - MacroBot
-- much more (i dont have that much time \'^\' you can (help me)[#for-developers]...)
+- much more (i dont have that much time \'^\' you can [help me](https://github.com/thisisignitedoreo/orbitalcb#for-developers)...)
 
 Clickpacks can be either a folder or a zip with such structure:
 
@@ -46,7 +46,7 @@ clickpack/
 ## For developers
 
 Clickbot is split into two parts: logic and interface.
-Logic is some kind of library on top of which you can write any interface you want
+Logic is some kind of library on top of which you can write any interface you want.
 This overcomes the problem with TCB++ in which I had a completly different console
 version with its own logic and such. It was really hard to maintain.
 
@@ -57,15 +57,15 @@ Adding bot-parsers is as easy as adding such key-value pair to macro_types:
     ("Human readable bot name", "Wildcard to match file with"): MacroClass
 
 Class should have:
-	- Function `__init__` with arguments self and path where path is path to the macro
-	- Variable self.path with path to the macro
-	- Variable self.data with macro's data in this format:
-		- `{ "fps": MACRO_FPS (*int),`<br>
-		  `  "replay": [`<br>
-		  `    { "frame": ACTION_FRAME (*int), "hold": ACTION_ISHOLD (True, False), "player": ACTION_PLAYER (1, 2) },`<br>
-		  `    ... ] }`<br>
+- Function `__init__` with arguments self and path where path is path to the macro
+- Variable self.path with path to the macro
+- Variable self.data with macro's data in this format:
+	- `{ "fps": MACRO_FPS (*int),`<br>
+	  `  "replay": [`<br>
+	  `    { "frame": ACTION_FRAME (*int), "hold": ACTION_ISHOLD (True, False), "player": ACTION_PLAYER (1, 2) },`<br>
+	  `    ... ] }`<br>
 
-You can take a look at existing classes for help if you need to (i think ya need to haha)
+You can take a look at existing classes for help if you need to (i think ya need haha)
 
 ## History
 
