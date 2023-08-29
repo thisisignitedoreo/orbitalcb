@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="assets">
+    <file>assets/file-black.svg</file>
+    <file>assets/file-white.svg</file>
+    <file>assets/folder-black.svg</file>
+    <file>assets/folder-white.svg</file>
+    <file>assets/icon-1024x1024-bg.png</file>
+    <file>assets/icon-1024x1024-nobg-black.png</file>
+    <file>assets/icon-1024x1024-nobg-white.png</file>
+    <file>assets/icon-1024x1024.psd</file>
+    <file>assets/icon-1920x1080-bg.png</file>
+    <file>assets/icon-1920x1080-nobg-black.png</file>
+    <file>assets/icon-1920x1080-nobg-white.png</file>
+    <file>assets/icon-1920x1080.psd</file>
+  </qresource>
+</RCC>
