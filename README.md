@@ -12,14 +12,12 @@ Current supported macros:
 - EchoBot
 - TasBot
 
-_
-Planned:
+_Planned_:
 - ReplayBot
 - ReplayEngine
 - MHReplay
 - MacroBot
 - much more (i dont have that much time \'^\' you can (help me)[#for-developers]...)
-_
 
 Clickpacks can be either a folder or a zip with such structure:
 
