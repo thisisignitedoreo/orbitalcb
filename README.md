@@ -1,4 +1,8 @@
-# Orbital ClickBot
+
+<img align=center src="assets/icon-1920x1080-nobg-white.png">
+
+<hr>
+
 GD ClickBot, continuation/rewrite of TCB++
 
 ## Quickstart
