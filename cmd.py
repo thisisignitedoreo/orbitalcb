@@ -61,9 +61,9 @@ if __name__ == "__main__":
 	log(f" description:{' unspecified' if not clickp_info[2] else ''}")
 	if clickp_info[1]:
 		for i in clickp_info[2].split('\n'):
-			print(f'  {i}')
+			log(f'  {i}')
 	log(f" author: {clickp_info[1] if clickp_info[1] else 'unspecified'}")
 
 	cb.render(macro, clickpack, output, {"softclicks": sc, "hardclicks": hc, "end": end, "progress_callback": progress})
-	print()
+	log()
 
