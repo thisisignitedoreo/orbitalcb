@@ -7,8 +7,8 @@ GD ClickBot, continuation/rewrite of TCB++
 
 ## Quickstart
 
-There's no console version (yet), but it's planned.
-Just download GUI version from [releases](https://github.com/thisisignitedoreo/orbitalcb/releases)
+GUI version -> download from [releases](https://github.com/thisisignitedoreo/orbitalcb/releases)<br/>
+Console version -> download from [releases](https://github.com/thisisignitedoreo/orbitalcb/releases), help is embedded in executable
 
 ## For users
 
