@@ -25,10 +25,11 @@ def parse_args(args):
 	
 	macro, clickpack, output = None, None, None
 	p = 0
+	docmd = True
 	stfu = False
 	for i in args:
-		if i == "--stfu":
-			stfu = True
+		if docmd and i == "--stfu": stfu = True
+		elif docmd and i == "--": docmd = False
 		else:
 			if p == 0: macro = i
 			elif p == 1: clickpack = i
