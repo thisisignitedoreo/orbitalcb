@@ -1,80 +1,37 @@
+
 from pydub import AudioSegment
 import fnmatch
 import zipfile
 import random
+import struct
 import json
 import os
 
+def read_f32(f):
+    return struct.unpack('f', f.read(4))[0]
 
-class EchoBotMacro:
-    def __init__(self, path):
-        self.path = path
-        self.data = self.parse()
+def read_u32(f):
+    return struct.unpack('I', f.read(4))[0]
 
-    def compile_ef_macro(self, macro):
-        a = []
+def parse_re_replay(length, fd):
+    replay = []
+    for i in range(length):
+        st = struct.unpack('I?i?xxx', fd.read(16))
+        replay.append({"frame": st[0], "hold": st[1], "player": 1 if st[3] else 2})
+    return replay
 
-        nop2 = len([i for i in macro if i["Player 2"]]) == 0
-
-        if nop2:
-            old = macro[0]["Hold"]
-            
-            for i in macro:
-                if i["Hold"] != old:
-                    a.append({"frame": i["Frame"], "hold": i["Hold"], "player": 1})
-                old = i["Hold"]
-        else:
-            old1 = [i for i in macro if not i["Player 2"]][0]["Hold"]
-            old2 = [i for i in macro if i["Player 2"]][0]["Hold"]
-        
-            for i in macro:
-                if i["Player 2"]:
-                    if i["Hold"] != old2:
-                        a.append({"frame": i["Frame"], "hold": i["Hold"], "player": 2})
-                    old2 = i["Hold"]
-                else:
-                    if i["Hold"] != old1:
-                        a.append({"frame": i["Frame"], "hold": i["Hold"], "player": 1})
-                    old1 = i["Hold"]
-
-        return a
-
-    def parse(self):
-        macro = {"fps": None, "replay": None}
-        orig_macro = json.load(open(self.path))
-
-        macro["fps"] = orig_macro["FPS"]
-        macro["replay"] = self.compile_ef_macro(orig_macro["Echo Replay"])
-
-        return macro
-
-
-class TasBotMacro:
-    def __init__(self, path):
-        self.path = path
-        self.data = self.parse()
-
-    def parse(self):
-        macro = {"fps": None, "replay": []}
-        orig_macro = json.load(open(self.path))
-
-        macro["fps"] = orig_macro["fps"]
-        for i in orig_macro["macro"]:
-            if i["player_1"]["click"] != 0:
-                macro["replay"].append({
-                    "frame": i["frame"], "hold": [None, False, True][i["player_1"]["click"]], "player": 1,
-                })
-            if i["player_2"]["click"] != 0:
-                macro["replay"].append({
-                    "frame": i["frame"], "hold": [None, False, True][i["player_2"]["click"]], "player": 2,
-                })
-
-        return macro
-
+def parse_re_macro(path):
+    macro = {}
+    with open(path, "rb") as f:
+        macro["tps"] = read_f32(f)
+        phys_replay_length = read_u32(f)
+        frame_replay_length = read_u32(f)
+        f.read(phys_replay_length * struct.calcsize('Ifffd?xxxxxxx'))
+        macro["replay"] = parse_re_replay(frame_replay_length, f)
+    return macro
 
 macro_types = {
-        ("EchoBot", "*.echo"): EchoBotMacro,
-        ("TasBot", "*.json"): TasBotMacro,
+    ("ReplayEngine", "*.re"): parse_re_macro,
 }
 
 
@@ -262,29 +219,28 @@ class Clickpack:
             if not p2hc: self.data["p2"]["hardclicks"] = None
 
 
-def render(macro_path, clickpack_path, output_path, options, callbacks):
+def render(macro_path, clickpack_path, output_path, options):
     if zipfile.is_zipfile(clickpack_path):
         temp_folder = "/tmp/" if os.name == "posix" else os.getenv("temp")
 
         folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
-        while os.path.isdir(temp_folder, folder):
+        while os.path.isdir(os.path.join(temp_folder, folder)):
             folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
 
         os.mkdir(os.path.join(temp_folder, folder))
 
         with zipfile.ZipFile(clickpack_path) as f:
             f.extractall(os.path.join(temp_folder, folder))
-
-        return render(macro_path, os.path.join(temp_folder, folder), output_path, options, callbacks)
+        return render(macro_path, os.path.join(temp_folder, folder), output_path, options)
 
     for k, i in macro_types.items():
         if fnmatch.fnmatch(macro_path, k[1]):
-            macro = i(macro_path).data
+            macro = i(macro_path)
             break
 
     last_frame = macro["replay"][-1]["frame"]
 
-    duration = last_frame / macro["fps"] * 1000 + options["end"] * 1000
+    duration = last_frame / macro["tps"] * 1000 + options["end"] * 1000
 
     output = AudioSegment.silent(duration=duration)
 
@@ -298,7 +254,7 @@ def render(macro_path, clickpack_path, output_path, options, callbacks):
     p2_last_click = 0
 
     for k, i in enumerate(macro["replay"], start=1):
-        callbacks[0](k, len(macro["replay"]))
+        options["progress_callback"](k, len(macro["replay"]))
 
         if i["player"] == 1:
             p1_click_delta = i["frame"] - p1_last_click
@@ -334,12 +290,28 @@ def render(macro_path, clickpack_path, output_path, options, callbacks):
 
             p2_last_click = i["frame"]
         
-        position = i["frame"] / macro["fps"] * 1000
+        position = i["frame"] / macro["tps"] * 1000
         output = output.overlay(sound, position=position)
     
     output.export(output_path, output_path.rsplit(".", 1)[-1])
 
 def clickpack_info(clickpack_path):
+    if os.path.isfile(clickpack_path):
+        if not zipfile.is_zipfile(clickpack_path): return ("", "", "")
+
+        temp_folder = "/tmp/" if os.name == "posix" else os.getenv("temp")
+
+        folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
+        while os.path.isdir(os.path.join(temp_folder, folder)):
+            folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
+
+        os.mkdir(os.path.join(temp_folder, folder))
+
+        with zipfile.ZipFile(clickpack_path) as f:
+            f.extractall(os.path.join(temp_folder, folder))
+        
+        clickpack_path = os.path.join(temp_folder, folder)
+
     if not os.path.isfile(os.path.join(clickpack_path, "meta.json")):
         return ("", "", "")
     else:
@@ -351,7 +323,7 @@ def clickpack_info(clickpack_path):
 def macro_info(macro_path):
     for i, c in macro_types.items():
         if fnmatch.fnmatch(macro_path, i[1]):
-            return (c(macro_path).data["fps"], )
+            return (c(macro_path)["tps"], )
 
 def is_clickpack(clickpack_path):
     if os.path.isdir(clickpack_path):
@@ -380,7 +352,7 @@ def is_clickpack(clickpack_path):
         temp_folder = "/tmp/" if os.name == "posix" else os.getenv("temp")
 
         folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
-        while os.path.isdir(temp_folder, folder):
+        while os.path.isdir(os.path.join(temp_folder, folder)):
             folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
 
         os.mkdir(os.path.join(temp_folder, folder))

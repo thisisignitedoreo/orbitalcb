@@ -62,8 +62,8 @@ class Orbital(QtWidgets.QMainWindow):
             return
 
         self.ui.macro_path.setText(text)
-        fps, = logic.macro_info(text)
-        self.ui.fps_spinbox.setValue(fps)
+        tps, = logic.macro_info(text)
+        self.ui.tps_spinbox.setValue(tps)
 
     def check_clickpack(self, text):
         if not (os.path.isfile(text) or os.path.isdir(text)):
@@ -99,10 +99,8 @@ class Orbital(QtWidgets.QMainWindow):
                 "softclicks": self.ui.sc_spinbox.value() if self.ui.sc_checkbox.isChecked() else None,
                 "hardclicks": self.ui.hc_spinbox.value() if self.ui.hc_checkbox.isChecked() else None,
                 "end": self.ui.end_spinbox.value(),
-            },
-            [
-                self.set_progressbar,
-            ]
+				"progress_callback": self.set_progressbar,
+            }
         )
         
         self.message_box("Done", "All done", 0)
