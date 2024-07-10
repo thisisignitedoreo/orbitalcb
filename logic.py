@@ -2,9 +2,11 @@
 from pydub import AudioSegment
 import fnmatch
 import zipfile
+import msgpack
 import random
 import struct
 import json
+import io
 import os
 
 def read_f32(f):
@@ -12,6 +14,15 @@ def read_f32(f):
 
 def read_u32(f):
     return struct.unpack('I', f.read(4))[0]
+
+def read_i32(f):
+    return struct.unpack('i', f.read(4))[0]
+
+def read_u64(f):
+    return struct.unpack('L', f.read(8))[0]
+
+def read_i64(f):
+    return struct.unpack('l', f.read(8))[0]
 
 def parse_re_replay(length, fd):
     replay = []
@@ -30,8 +41,70 @@ def parse_re_macro(path):
         macro["replay"] = parse_re_replay(frame_replay_length, f)
     return macro
 
+def parse_ybot_meta(meta):
+	with io.BytesIO(meta) as m:
+		date =     read_i64(m)
+		presses =  read_u64(m)
+		frames =   read_u64(m)
+		fps =      read_f32(m)
+		tpresses = read_u64(m)
+
+	return date, presses, frames, fps, tpresses
+
+def parse_ybot_macro(path):
+	macro = {}
+	# thx alot to zeo for helping me out with this monstrousity of a format
+	# kepe
+	# why???
+	with open(path, "rb") as f:
+		f.seek(0, 2)
+		size = f.tell()
+		f.seek(0, 0)
+		magic = f.read(4) # assume it is correct, after call to is_macro(path)
+		version = read_u32(f)
+		meta_len = read_u32(f)
+		blobs = read_u32(f)
+
+		meta = f.read(meta_len)
+		date, presses, frames, fps, tpresses = parse_ybot_meta(meta)
+		macro["tps"] = fps
+		for _ in range(blobs):
+			blen = read_u32(f)
+			print(f.read(blen))
+
+		frame = 0
+		macro["replay"] = []
+		while True:
+			if size - f.tell() < 8: break
+			action = read_u64(f)
+			flags = action & 0b1111
+			if flags == 0b1111:
+				# fps-change action
+				newfps = read_f32(f)
+				print(f'fps change: {newfps}\ntodo: implement fps change')
+			else:
+				delta = action >> 4
+				frame += delta
+				player = 1 if flags & 0b0001 else 2
+				hold = not not flags & 0b0010
+				macro["replay"].append({"frame": frame, "hold": hold, "player": player})
+		print(f'{magic=} {version=} {meta_len=} {blobs=} {date=} {presses=} {frames=} {fps=} {tpresses=} {frame=}')
+	print(macro["replay"][0:3])
+
+	return macro
+
+def parse_gdr(path, binary):
+	if binary: data = msgpack.load(open(path, "rb"))
+	else: data = json.load(open(path))
+	macro = {"tps": data["framerate"]}
+	macro["replay"] = [{"frame": i['frame'], "hold": i['down'], "player": 2 if i["2p"] else 1} for i in data["inputs"]]
+	return macro
+
 macro_types = {
     ("ReplayEngine", "*.re"): parse_re_macro,
+    # ("YBot Macro", "*.ybot"): parse_ybot_macro, # unfinished & does not work
+	("GDR Replay", "*.gdr"): lambda x: parse_gdr(x, binary=True),
+	("GDR JSON Replay", "*.gdr.json"): lambda x: parse_gdr(x, binary=False),
 }
 
 
