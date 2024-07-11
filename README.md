@@ -14,6 +14,7 @@ Console version -> download from [releases](https://github.com/thisisignitedoreo
 
 Current supported macros:
 - ReplayEngine
+- GDR (GDMO Bot)
 
 _Planned_:<br/>
 all 2.2 bots
