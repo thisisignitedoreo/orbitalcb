@@ -64,7 +64,6 @@ def parse_ybot_macro(path):
         version = read_u32(f)
         meta_len = read_u32(f)
         blobs = read_u32(f)
-
         meta = f.read(meta_len)
         date, presses, frames, fps, tpresses = parse_ybot_meta(meta)
         macro["tps"] = fps
@@ -100,11 +99,20 @@ def parse_gdr(path, binary):
     macro["replay"] = [{"frame": i['frame'], "hold": i['down'], "player": 2 if i["2p"] else 1} for i in data["inputs"]]
     return macro
 
+def parse_tasbot(path):
+    data = json.load(open(path))
+    macro = {"tps": data["fps"], "replay": []}
+    for i in data["macro"]:
+        if i["player_1"]["click"]: macro["replay"].append({"frame": i["frame"], "hold": not not (i["player_1"]["click"] - 1), "player": 1})
+        if i["player_2"]["click"]: macro["replay"].append({"frame": i["frame"], "hold": not not (i["player_2"]["click"] - 1), "player": 2})
+    return macro
+
 macro_types = {
     ("ReplayEngine", "*.re"): parse_re_macro,
     # ("YBot Macro", "*.ybot"): parse_ybot_macro, # unfinished & does not work
     ("GDR Replay", "*.gdr"): lambda x: parse_gdr(x, binary=True),
     ("GDR JSON Replay", "*.gdr.json"): lambda x: parse_gdr(x, binary=False),
+    ("TASBot Replay", "*.json"): parse_tasbot,
 }
 
 
