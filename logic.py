@@ -37,7 +37,7 @@ def parse_re_macro(path):
         macro["tps"] = read_f32(f)
         phys_replay_length = read_u32(f)
         frame_replay_length = read_u32(f)
-        f.read(phys_replay_length * struct.calcsize('Ifffd?xxxxxxx'))
+        f.seek(phys_replay_length * struct.calcsize('Ifffd?xxxxxxx'), 1)
         macro["replay"] = parse_re_replay(frame_replay_length, f)
     return macro
 
