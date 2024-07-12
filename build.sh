@@ -10,5 +10,5 @@ python -m nuitka --onefile cmd.py
 
 rm -r cmd.build cmd.dist build
 mv dist/Orbital ./
-mv cmd.bin OribtalCmd
+mv cmd.bin OrbitalCmd
 rm -r dist
