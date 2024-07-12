@@ -117,14 +117,15 @@ def deltaify_xd(frames):
     res = []
     for i in frames:
         frame, hold, _, player1, *_ = i.split("|")
+        hold = hold == "1"
         if player1 == "1":
-            if oldp1 != (hold == "1"):
-                oldp1 = hold == "1"
-                res.append({"frame": int(frame), "hold": hold == "1", "player": 1})
+            if oldp1 != hold:
+                oldp1 = hold
+                res.append({"frame": int(frame), "hold": hold, "player": 1})
         else:
-            if oldp2 != (hold == "1"):
-                oldp2 = hold == "1"
-                res.append({"frame": int(frame), "hold": hold == "1", "player": 2})
+            if oldp2 != hold:
+                oldp2 = hold
+                res.append({"frame": int(frame), "hold": hold, "player": 2})
     return res
 
 def parse_xd(path):

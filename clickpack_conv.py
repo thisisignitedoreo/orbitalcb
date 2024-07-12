@@ -33,6 +33,11 @@ def zcb_live(path, output_path, name, options=set(), p="p1"):
 			shutil.copy(os.path.join(path, "hardClicks", i), os.path.join(output_path, p, "hardclicks", "holds"))
 		for i in os.listdir(os.path.join(path, "hardReleases")):
 			shutil.copy(os.path.join(path, "hardReleases", i), os.path.join(output_path, p, "hardclicks", "releases"))
+	
+	if any(map(lambda x: x.startswith("bgn"), os.listdir(path))):
+		for i in filter(lambda x: x.startswith("bgn"), os.listdir(path)):
+			fmt = i.rsplit(".", 1)[1]
+			shutil.copy(os.path.join(path, i), os.path.join(output_path, f'bg-noise.{fmt}'))
 
 	open(os.path.join(output_path, "meta.json"), "w").write('{' + f'"name": "{repr(name)[1:-1]}", "description": "auto-translated from zcb-live clickpack", "author": "???"' + '}')
 
