@@ -15,10 +15,10 @@ Console version -> download from [releases](https://github.com/thisisignitedoreo
 Current supported macros:
 - ReplayEngine
 - GDR (GDMO Bot)
+- TASBot
 
 _Planned_:<br/>
 - YBot
-- TASBot
 - some other 2.2 bots (do they even exist?)
 
 Clickpacks can be either a folder or a zip with such structure:
