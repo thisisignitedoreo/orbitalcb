@@ -107,12 +107,43 @@ def parse_tasbot(path):
         if i["player_2"]["click"]: macro["replay"].append({"frame": i["frame"], "hold": not not (i["player_2"]["click"] - 1), "player": 2})
     return macro
 
+def deltaify_xd(frames):
+    # 1 0    1 0
+    # 2 0 => 3 1
+    # 3 1    4 0
+    # 4 0
+    oldp1 = None
+    oldp2 = None
+    res = []
+    for i in frames:
+        frame, hold, _, player1, *_ = i.split("|")
+        if player1 == "1":
+            if oldp1 != (hold == "1"):
+                oldp1 = hold == "1"
+                res.append({"frame": int(frame), "hold": hold == "1", "player": 1})
+        else:
+            if oldp2 != (hold == "1"):
+                oldp2 = hold == "1"
+                res.append({"frame": int(frame), "hold": hold == "1", "player": 2})
+    return res
+
+def parse_xd(path):
+    file = open(path).readlines()
+    if "|" in file[0]: fps = 240 # idk
+    else:
+        fps = int(file[0])
+        file = file[1:]
+    macro = {"tps": fps}
+    macro["replay"] = deltaify_xd(file)
+    return macro
+
 macro_types = {
     ("ReplayEngine", "*.re"): parse_re_macro,
     # ("YBot Macro", "*.ybot"): parse_ybot_macro, # unfinished & does not work
     ("GDR Replay", "*.gdr"): lambda x: parse_gdr(x, binary=True),
     ("GDR JSON Replay", "*.gdr.json"): lambda x: parse_gdr(x, binary=False),
     ("TASBot Replay", "*.json"): parse_tasbot,
+    ("xdBot Replay", "*.xd"): parse_xd,
 }
 
 
