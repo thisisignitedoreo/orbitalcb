@@ -16,7 +16,7 @@ def zcb_live(path, output_path, name, options=set(), p="p1"):
 	for i in os.listdir(os.path.join(path, "releases")):
 		shutil.copy(os.path.join(path, "releases", i), os.path.join(output_path, p, "releases"))
 
-	if os.path.join(path, "softClicks") and os.path.join(path, "softReleases"):
+	if os.path.isdir(os.path.join(path, "softClicks")) and os.path.isdir(os.path.join(path, "softReleases")):
 		os.mkdir(os.path.join(output_path, p, "softclicks"))
 		os.mkdir(os.path.join(output_path, p, "softclicks", "holds"))
 		os.mkdir(os.path.join(output_path, p, "softclicks", "releases"))
@@ -25,7 +25,7 @@ def zcb_live(path, output_path, name, options=set(), p="p1"):
 		for i in os.listdir(os.path.join(path, "softReleases")):
 			shutil.copy(os.path.join(path, "softReleases", i), os.path.join(output_path, p, "softclicks", "releases"))
 
-	if os.path.join(path, "hardClicks") and os.path.join(path, "hardReleases"):
+	if os.path.isdir(os.path.join(path, "hardClicks")) and os.path.isdir(os.path.join(path, "hardReleases")):
 		os.mkdir(os.path.join(output_path, p, "hardclicks"))
 		os.mkdir(os.path.join(output_path, p, "hardclicks", "holds"))
 		os.mkdir(os.path.join(output_path, p, "hardclicks", "releases"))

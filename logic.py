@@ -42,69 +42,69 @@ def parse_re_macro(path):
     return macro
 
 def parse_ybot_meta(meta):
-	with io.BytesIO(meta) as m:
-		date =     read_i64(m)
-		presses =  read_u64(m)
-		frames =   read_u64(m)
-		fps =      read_f32(m)
-		tpresses = read_u64(m)
+    with io.BytesIO(meta) as m:
+        date =     read_i64(m)
+        presses =  read_u64(m)
+        frames =   read_u64(m)
+        fps =      read_f32(m)
+        tpresses = read_u64(m)
 
-	return date, presses, frames, fps, tpresses
+    return date, presses, frames, fps, tpresses
 
 def parse_ybot_macro(path):
-	macro = {}
-	# thx alot to zeo for helping me out with this monstrousity of a format
-	# kepe
-	# why???
-	with open(path, "rb") as f:
-		f.seek(0, 2)
-		size = f.tell()
-		f.seek(0, 0)
-		magic = f.read(4) # assume it is correct, after call to is_macro(path)
-		version = read_u32(f)
-		meta_len = read_u32(f)
-		blobs = read_u32(f)
+    macro = {}
+    # thx alot to zeo for helping me out with this monstrousity of a format
+    # kepe
+    # why???
+    with open(path, "rb") as f:
+        f.seek(0, 2)
+        size = f.tell()
+        f.seek(0, 0)
+        magic = f.read(4) # assume it is correct, after call to is_macro(path)
+        version = read_u32(f)
+        meta_len = read_u32(f)
+        blobs = read_u32(f)
 
-		meta = f.read(meta_len)
-		date, presses, frames, fps, tpresses = parse_ybot_meta(meta)
-		macro["tps"] = fps
-		for _ in range(blobs):
-			blen = read_u32(f)
-			print(f.read(blen))
+        meta = f.read(meta_len)
+        date, presses, frames, fps, tpresses = parse_ybot_meta(meta)
+        macro["tps"] = fps
+        for _ in range(blobs):
+            blen = read_u32(f)
+            print(f.read(blen))
 
-		frame = 0
-		macro["replay"] = []
-		while True:
-			if size - f.tell() < 8: break
-			action = read_u64(f)
-			flags = action & 0b1111
-			if flags == 0b1111:
-				# fps-change action
-				newfps = read_f32(f)
-				print(f'fps change: {newfps}\ntodo: implement fps change')
-			else:
-				delta = action >> 4
-				frame += delta
-				player = 1 if flags & 0b0001 else 2
-				hold = not not flags & 0b0010
-				macro["replay"].append({"frame": frame, "hold": hold, "player": player})
-		print(f'{magic=} {version=} {meta_len=} {blobs=} {date=} {presses=} {frames=} {fps=} {tpresses=} {frame=}')
-	print(macro["replay"][0:3])
+        frame = 0
+        macro["replay"] = []
+        while True:
+            if size - f.tell() < 8: break
+            action = read_u64(f)
+            flags = action & 0b1111
+            if flags == 0b1111:
+                # fps-change action
+                newfps = read_f32(f)
+                print(f'fps change: {newfps}\ntodo: implement fps change')
+            else:
+                delta = action >> 4
+                frame += delta
+                player = 1 if flags & 0b0001 else 2
+                hold = not not flags & 0b0010
+                macro["replay"].append({"frame": frame, "hold": hold, "player": player})
+        print(f'{magic=} {version=} {meta_len=} {blobs=} {date=} {presses=} {frames=} {fps=} {tpresses=} {frame=}')
+    print(macro["replay"][0:3])
 
-	return macro
+    return macro
 
 def parse_gdr(path, binary):
-	if binary: data = msgpack.load(open(path, "rb"))
-	else: data = json.load(open(path))
-	macro = {"tps": data["framerate"]}
-	macro["replay"] = [{"frame": i['frame'], "hold": i['down'], "player": 2 if i["2p"] else 1} for i in data["inputs"]]
-	return macro
+    if binary: data = msgpack.load(open(path, "rb"))
+    else: data = json.load(open(path))
+    macro = {"tps": data["framerate"]}
+    macro["replay"] = [{"frame": i['frame'], "hold": i['down'], "player": 2 if i["2p"] else 1} for i in data["inputs"]]
+    return macro
 
 macro_types = {
     ("ReplayEngine", "*.re"): parse_re_macro,
     # ("YBot Macro", "*.ybot"): parse_ybot_macro, # unfinished & does not work
-	("GDR Replay", "*.gdr"): lambda x: parse_gdr(x, binary=True),
-	("GDR JSON Replay", "*.gdr.json"): lambda x: parse_gdr(x, binary=False),
+    ("GDR Replay", "*.gdr"): lambda x: parse_gdr(x, binary=True),
+    ("GDR JSON Replay", "*.gdr.json"): lambda x: parse_gdr(x, binary=False),
 }
 
 
@@ -113,6 +113,7 @@ macro_types = {
 class Clickpack:
     def __init__(self, path):
         self.data = {
+            "bg-noise": None,
             "p1": {
                 "holds": [],
                 "releases": [],
@@ -290,7 +291,11 @@ class Clickpack:
         else:
             if not p2sc: self.data["p2"]["softclicks"] = None
             if not p2hc: self.data["p2"]["hardclicks"] = None
-
+        
+        if os.path.isfile(os.path.join(path, "bg-noise.ogg")): self.data["bg-noise"] = AudioSegment.from_ogg(os.path.join(path, "bg-noise.ogg"))
+        if os.path.isfile(os.path.join(path, "bg-noise.mp3")): self.data["bg-noise"] = AudioSegment.from_mp3(os.path.join(path, "bg-noise.mp3"))
+        if os.path.isfile(os.path.join(path, "bg-noise.wav")): self.data["bg-noise"] = AudioSegment.from_wav(os.path.join(path, "bg-noise.wav"))
+        if os.path.isfile(os.path.join(path, "bg-noise.flac")): self.data["bg-noise"] = AudioSegment.from_flac(os.path.join(path, "bg-noise.flac"))
 
 def render(macro_path, clickpack_path, output_path, options):
     if zipfile.is_zipfile(clickpack_path):
@@ -318,7 +323,9 @@ def render(macro_path, clickpack_path, output_path, options):
     output = AudioSegment.silent(duration=duration)
 
     clickpack = Clickpack(clickpack_path)
-    
+
+    if clickpack.data["bg-noise"] and options["noise"]:
+        output = output.overlay(clickpack.data["bg-noise"], loop=True)
 
     p1_click_delta = 0
     p2_click_delta = 0
@@ -385,13 +392,17 @@ def clickpack_info(clickpack_path):
         
         clickpack_path = os.path.join(temp_folder, folder)
 
+    isf = lambda *x: os.path.isfile(os.path.join(*x))
+    has_noise = isf(clickpack_path, "bg-noise.wav") or \
+                isf(clickpack_path, "bg-noise.mp3") or \
+                isf(clickpack_path, "bg-noise.ogg") or \
+                isf(clickpack_path, "bg-noise.flac")
+
     if not os.path.isfile(os.path.join(clickpack_path, "meta.json")):
-        return ("", "", "")
+        return ("", "", "", has_noise)
     else:
         json_meta = json.load(open(os.path.join(clickpack_path, "meta.json")))
-        if not ("name" in json_meta.keys() and "author" in json_meta.keys() and "description" in json_meta.keys()):
-            return ("", "", "")
-        return (json_meta["name"], json_meta["author"], json_meta["description"])
+        return (json_meta.get("name", ""), json_meta.get("author", ""), json_meta.get("description", ""), has_noise)
 
 def macro_info(macro_path):
     for i, c in macro_types.items():
