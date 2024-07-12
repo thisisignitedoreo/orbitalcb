@@ -12,7 +12,7 @@ def log(*args, end="\n", sep=" "):
 
 def error(string):
 	print(string)
-	exit(1)
+	sys.exit(1)
 
 def print_usage(prg):
 	print(f"usage: {prg} <macro> <clickpack> <output> [--stfu] [--no-noise]")
@@ -21,7 +21,7 @@ def parse_args(args):
 	program = args.pop(0)
 	if len(args) == 0:
 		print_usage(program)
-		exit(1)
+		sys.exit(1)
 	
 	macro, clickpack, output = None, None, None
 	p = 0
