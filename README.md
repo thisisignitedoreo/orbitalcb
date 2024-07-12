@@ -17,12 +17,16 @@ Current supported macros:
 - GDR (GDMO Bot)
 
 _Planned_:<br/>
-all 2.2 bots
+- YBot
+- TASBot
+- some other 2.2 bots (do they even exist?)
 
 Clickpacks can be either a folder or a zip with such structure:
 
 ```
 clickpack/
+├─ bg-noise.wav    # mp3/ogg/flac is also supported
+│                  # also optional
 ├─ p1/
 │  ├─ softclicks/  # optional
 │  │  ├─ holds/
@@ -61,7 +65,7 @@ appreciated by me. Just follow license (opensource your code under GPL v3 licens
 Adding bot-parsers is as easy as adding such key-value pair to `macro_types` global:
 > `("Human readable bot name", "Wildcard to match file with"): parse_function`
 
-`parse_function` is function with signature `fn(macro_path)` and return such object:
+`parse_function` is function with signature `fn(macro_path: str) -> dict` and return such object:
 > `{ "fps": MACRO_FPS (*int),`<br>
 > `  "replay": [`<br>
 > `    { "frame": ACTION_FRAME (*int), "hold": ACTION_ISHOLD (True, False), "player": ACTION_PLAYER (1, 2) },`<br>
