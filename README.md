@@ -16,6 +16,7 @@ Current supported macros:
 - ReplayEngine
 - GDR (GDMO Bot)
 - TASBot
+- xdBot
 
 _Planned_:<br/>
 - YBot
