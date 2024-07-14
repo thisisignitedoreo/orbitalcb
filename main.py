@@ -34,8 +34,8 @@ class Orbital(QtWidgets.QMainWindow):
 		
 		self.ui.render_pushbutton.clicked.connect(self.render)
 
-		self.ui.macro_path.textChanged.connect(lambda: self.check_macro(self.ui.macro_path.text(), inline=True))
-		self.ui.clickpack_path.textChanged.connect(lambda: self.check_clickpack(self.ui.clickpack_path.text(), inline=True))
+		self.ui.macro_path.textEdited.connect(lambda: self.check_macro(self.ui.macro_path.text(), inline=True))
+		self.ui.clickpack_path.textEdited.connect(lambda: self.check_clickpack(self.ui.clickpack_path.text(), inline=True))
 
 		self.ui.macro_browse.clicked.connect(self.macro_browse)
 		self.ui.clickpack_browse_file.clicked.connect(lambda: self.clickpack_browse(1))
@@ -49,11 +49,11 @@ class Orbital(QtWidgets.QMainWindow):
 		elif mode == 1:
 			text, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select clickpack file", None, "Clickpack file (*.zip)")
 
-		if text: self.check_clickpack(text)
+		if text: self.ui.macro_path.setText(text)
 
 	def macro_browse(self):
 		text, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select macro", None, ";;".join([f"{i[0]} ({i[1]})" for i in logic.macro_types.keys()]))
-		if text: self.check_macro(text)
+		if text: self.ui.clickpack_path.setText(text)
 	
 	def update_valid(self):
 		self.ui.render_pushbutton.setEnabled(self.clickpack_valid and self.macro_valid)
@@ -64,10 +64,6 @@ class Orbital(QtWidgets.QMainWindow):
 		self.macro_valid = False
 		self.update_valid()
 
-		if not os.path.isfile(text):
-			if not inline: self.message_box("Error", "This file does not exist!", 1)
-			return
-			
 		if not logic.is_macro(text):
 			if not inline: self.message_box("Error", f"This file is not a supported macro! (supported: {', '.join(map(lambda x: x[0], logic.macro_types.keys()))})", 1)
 			return
@@ -89,10 +85,6 @@ class Orbital(QtWidgets.QMainWindow):
 		self.clickpack_valid = False
 		self.update_valid()
 		
-		if not (os.path.isfile(text) or os.path.isdir(text)):
-			if not inline: self.message_box("Error", "This file/folder does not exist!", 1)
-			return
-			
 		if not logic.is_clickpack(text):
 			if not inline: self.message_box("Error", "This file/folder is not a clickpack!", 1)
 			return

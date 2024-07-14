@@ -1,5 +1,7 @@
 
 from pydub import AudioSegment
+import clickpack_conv as conv
+import requests
 import fnmatch
 import zipfile
 import msgpack
@@ -69,11 +71,12 @@ def parse_ybot_macro(path):
         macro["tps"] = fps
         for _ in range(blobs):
             blen = read_u32(f)
-            print(f.read(blen))
 
         frame = 0
         macro["replay"] = []
         while True:
+            print(bin(read_u64(f)))
+            f.seek(-8, 1)
             if size - f.tell() < 8: break
             action = read_u64(f)
             flags = action & 0b1111
@@ -180,6 +183,13 @@ class Clickpack:
             },
         }
         
+        if path.startswith("clickpackdb:"):
+            cpid = path[len("clickpackdb:"):]
+            db = clickpackdb()
+            cp = db["clickpacks"][cpid]
+            cp = download(cp["url"])
+            path = conv.from_memory(cp, conv.zcb_live, name=cpid)
+
         sc = True
         hc = True
         p2 = True
@@ -337,15 +347,30 @@ class Clickpack:
         if os.path.isfile(os.path.join(path, "bg-noise.wav")): self.data["bg-noise"] = AudioSegment.from_wav(os.path.join(path, "bg-noise.wav"))
         if os.path.isfile(os.path.join(path, "bg-noise.flac")): self.data["bg-noise"] = AudioSegment.from_flac(os.path.join(path, "bg-noise.flac"))
 
+def create_temp_folder():
+    temp_folder = "/tmp/" if os.name == "posix" else os.getenv("temp")
+
+    folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
+    while os.path.isdir(os.path.join(temp_folder, folder)):
+        folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
+
+    os.mkdir(os.path.join(temp_folder, folder))
+    return temp_folder, folder
+
+def download(url):
+    return requests.get(url).content
+
+db = None
+
+def clickpackdb():
+    global db
+    if not db:
+        db = requests.get("https://raw.githubusercontent.com/zeozeozeo/clickpack-db/main/db.json").json()
+    return db
+
 def render(macro_path, clickpack_path, output_path, options):
     if zipfile.is_zipfile(clickpack_path):
-        temp_folder = "/tmp/" if os.name == "posix" else os.getenv("temp")
-
-        folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
-        while os.path.isdir(os.path.join(temp_folder, folder)):
-            folder = "_ORBITAL" + str(random.randint(100000000000000000, 999999999999999999))
-
-        os.mkdir(os.path.join(temp_folder, folder))
+        temp_folder, folder = create_temp_folder()
 
         with zipfile.ZipFile(clickpack_path) as f:
             f.extractall(os.path.join(temp_folder, folder))
@@ -416,8 +441,15 @@ def render(macro_path, clickpack_path, output_path, options):
     output.export(output_path, output_path.rsplit(".", 1)[-1])
 
 def clickpack_info(clickpack_path):
+    if clickpack_path.startswith("clickpackdb:"):
+        cpid = clickpack_path[len("clickpackdb:"):]
+        db = clickpackdb()
+        cp = db["clickpacks"][cpid]
+
+        return (cpid, "???", "clickpack from clickpackdb", cp["has_noise"])
+        
     if os.path.isfile(clickpack_path):
-        if not zipfile.is_zipfile(clickpack_path): return ("", "", "")
+        if not zipfile.is_zipfile(clickpack_path): return ("", "", "", False)
 
         temp_folder = "/tmp/" if os.name == "posix" else os.getenv("temp")
 
@@ -485,7 +517,15 @@ def is_clickpack(clickpack_path):
             f.extractall(os.path.join(temp_folder, folder))
 
         return is_clickpack(os.path.join(temp_folder, folder))
+    
+    else:
+        if clickpack_path.startswith("clickpackdb:"):
+            clickpackid = clickpack_path[len("clickpackdb:"):]
+            db = clickpackdb()
+            return clickpackid in db["clickpacks"].keys()
+    return False
 
 def is_macro(macro_path):
+    if not os.path.isfile(macro_path): return False
     return any([fnmatch.fnmatch(macro_path, i[1]) for i in macro_types.keys()])
 

@@ -51,8 +51,8 @@ def progress(v, x):
 if __name__ == "__main__":
 	macro, clickpack, output, noise, stfu = parse_args(sys.argv)
 
-	if not (os.path.isfile(macro) and cb.is_macro(macro)): error("no such file or not a macro")
-	if not (os.path.isfile(clickpack) and cb.is_clickpack(clickpack)): error("no such file/folder or not a click path")
+	if not cb.is_macro(macro): error("no such file or not a macro")
+	if not cb.is_clickpack(clickpack): error("no such file/folder or not a click path")
 	
 	sc, hc, end = 200, 500, 3
 
