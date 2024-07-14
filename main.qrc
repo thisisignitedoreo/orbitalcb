@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="assets">
+    <file>assets/cloud-white.svg</file>
+    <file>assets/cloud-black.svg</file>
     <file>assets/file-black.svg</file>
     <file>assets/file-white.svg</file>
     <file>assets/folder-black.svg</file>
