@@ -100,9 +100,11 @@ class Orbital(QtWidgets.QMainWindow):
 		self.clickpack_valid = True
 		self.update_valid()
 
-	def set_progressbar(self, value, maxvalue):
+	def set_progressbar(self, value, maxvalue, text):
 		self.ui.main_progressbar.setMaximum(maxvalue)
 		self.ui.main_progressbar.setValue(value)
+		if text == 0: self.ui.main_progressbar.setFormat("Rendering: %p%")
+		if text == 1: self.ui.main_progressbar.setFormat("Downloading clickpack: %p%")
 		app.processEvents()
 
 	def render(self):

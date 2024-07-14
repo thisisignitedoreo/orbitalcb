@@ -154,7 +154,7 @@ macro_types = {
 # god forgive me i wrote it on 02:40
 
 class Clickpack:
-    def __init__(self, path):
+    def __init__(self, path, callback=None):
         self.data = {
             "bg-noise": None,
             "p1": {
@@ -187,7 +187,7 @@ class Clickpack:
             cpid = path[len("clickpackdb:"):]
             db = clickpackdb()
             cp = db["clickpacks"][cpid]
-            cp = download(cp["url"])
+            cp = download(cp["url"], callback)
             path = conv.from_memory(cp, conv.zcb_live, name=cpid)
 
         sc = True
@@ -357,8 +357,27 @@ def create_temp_folder():
     os.mkdir(os.path.join(temp_folder, folder))
     return temp_folder, folder
 
-def download(url):
-    return requests.get(url).content
+
+def download(url, callback=None):
+    request = requests.get(url, stream=True)
+    if not request.ok:
+        return None
+
+    length = request.headers.get('content-length')
+    data = b""
+
+    if length is None:
+        data += request.content
+    else:
+        dl = 0
+        length = int(length)
+        for d in request.iter_content(chunk_size=1024):
+            dl += len(d)
+            data += d
+            
+            if callback: callback(dl, length, 1)
+
+    return data
 
 db = None
 
@@ -387,7 +406,7 @@ def render(macro_path, clickpack_path, output_path, options):
 
     output = AudioSegment.silent(duration=duration)
 
-    clickpack = Clickpack(clickpack_path)
+    clickpack = Clickpack(clickpack_path, options["progress_callback"])
 
     if clickpack.data["bg-noise"] and options["noise"]:
         output = output.overlay(clickpack.data["bg-noise"], loop=True)
@@ -399,7 +418,7 @@ def render(macro_path, clickpack_path, output_path, options):
     p2_last_click = 0
 
     for k, i in enumerate(macro["replay"], start=1):
-        options["progress_callback"](k, len(macro["replay"]))
+        options["progress_callback"](k, len(macro["replay"]), 0)
 
         if i["player"] == 1:
             p1_click_delta = i["frame"] - p1_last_click
