@@ -4,7 +4,7 @@ pyside6-uic main.ui -o ui_main.py
 pyside6-rcc main.qrc -o main_rc.py
 
 pyinstaller Orbital.spec
-nuitka --windows-icon-from-ico=assets\icon.ico cmd.py
+nuitka --windows-icon-from-ico=assets\icon.ico --onefile cmd.py
 
 rd build /s/q
 rd cmd.build /s/q
