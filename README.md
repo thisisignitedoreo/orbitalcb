@@ -1,4 +1,11 @@
 
+> [!WARNING] This is deprecated
+> This clickbot never was really any good, and it's just waiting to be archived
+> Use [ZCB3](https://github.com/zeozeozeo/zcb3) by zeo, it's really good (fr this time)
+> Feel free to use this as learning material or smth idk
+
+---
+
 <img align=center src="assets/icon-1920x1080-nobg-white.png">
 
 <hr>
